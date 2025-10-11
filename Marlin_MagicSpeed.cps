@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 rflulling
 // An open source project developed by GitHub Copilot GPT-4.1 and rflulling
-
 /**
  * Fusion360 Post Processor for Marlin - Dynamic (Magic) Speed Control Sample
  * 
@@ -12,41 +11,50 @@
  */
 
 description = "Marlin Dynamic Speed Control Sample (Magic)";
-vendor = "rflulling";
+vendor = "Open Source";
+vendorUrl = "https://marlinfw.org/";
 longDescription = "Fusion360 post for Marlin: dynamic speed, acceleration, and jerk control per segment or toolpath. 'Magic' mode for optimal hybrid control.";
 
+// Default property values
 properties = {
+  speedControlMode: 0 // 0=Firmware, 1=G-code, 2=Magic
+};
+
+// UI property definitions for dropdown
+propertyDefinitions = {
   speedControlMode: {
     title: "Speed Control Mode",
     description: "Choose how speed/acceleration are managed: Firmware (Marlin), G-code (per move), or Magic (dynamic hybrid).",
-    type: "list",
+    type: "integer",
     values: [
-      {value: "Firmware", title: "Firmware (let Marlin manage motion, set parameters at start)"},
-      {value: "Gcode",    title: "G-code (post sets F/accel/jerk per move or toolpath)"},
-      {value: "Magic",    title: "Magic (analyze, optimize, and dynamically blend both approaches)"}
+      { title: "Firmware (let Marlin manage motion, set parameters at start)", id: 0 },
+      { title: "G-code (post sets F/accel/jerk per move or toolpath)", id: 1 },
+      { title: "Magic (analyze/optimize, dynamically blend both approaches)", id: 2 }
     ],
-    value: "Firmware"
+    default_mm: 0,
+    default_in: 0
   }
 };
 
-var mode = null;
+var modeLabels = ["Firmware", "Gcode", "Magic"];
 
 function onOpen() {
-  mode = properties.speedControlMode;
-  writeComment("Marlin Post - Speed Mode: " + mode);
-  if (mode === "Magic") {
-    writeComment("WARNING: Magic mode may require more processing time and larger G-code files.");
+  var mode = properties.speedControlMode;
+  writeln("; Marlin Post - Speed Mode: " + modeLabels[mode]);
+  if (mode === 2) {
+    writeln("; WARNING: Magic mode may require more processing time and larger G-code files.");
   }
   // Optionally, output firmware config block at start
-  if (mode === "Firmware" || mode === "Magic") {
-    writeBlock("M201 X1000 Y1000 Z100 E5000 ; Default accelerations");
-    writeBlock("M204 P1000 T2000 ; Default/Travel accel");
-    writeBlock("M205 J0.02 ; Junction deviation");
-    writeComment("Firmware speed/accel/jerk set at program start.");
+  if (mode === 0 || mode === 2) {
+    writeln("M201 X1000 Y1000 Z100 E5000 ; Default accelerations");
+    writeln("M204 P1000 T2000 ; Default/Travel accel");
+    writeln("M205 J0.02 ; Junction deviation");
+    writeln("; Firmware speed/accel/jerk set at program start.");
   }
 }
 
 function onSection() {
+  var mode = properties.speedControlMode;
   // Simulated toolpath: replace with actual Fusion360 section moves
   var toolpath = [
     {type: "line",   length: 20.0, F: 3000, accel: 1000, jerk: 0.02},
@@ -60,17 +68,17 @@ function onSection() {
     var outLine = "";
     var warn = "";
     // --- FIRMWARE: Output simple move, let firmware handle motion ---
-    if (mode === "Firmware") {
+    if (mode === 0) {
       outLine = makeMove(seg, seg.F);
     }
     // --- GCODE: Output move with explicit F, M204/M205 as needed ---
-    else if (mode === "Gcode") {
-      if (seg.accel) writeBlock("M204 P" + seg.accel + " ; Set acceleration");
-      if (seg.jerk)  writeBlock("M205 J" + seg.jerk  + " ; Set junction deviation");
+    else if (mode === 1) {
+      if (seg.accel) writeln("M204 P" + seg.accel + " ; Set acceleration");
+      if (seg.jerk)  writeln("M205 J" + seg.jerk  + " ; Set junction deviation");
       outLine = makeMove(seg, seg.F);
     }
     // --- MAGIC: Dynamically optimize per segment ---
-    else if (mode === "Magic") {
+    else if (mode === 2) {
       // Example: Slow for short lines or tight arcs, speed up for long/straight
       var F = seg.F;
       if (seg.length < 1.0) {
@@ -83,7 +91,7 @@ function onSection() {
       }
       if (seg.type === "ramp") {
         F = Math.min(seg.F, 700);
-        writeBlock("M204 P" + seg.accel + " ; Set ramp acceleration");
+        writeln("M204 P" + seg.accel + " ; Set ramp acceleration");
         warn = " (ramp, special acceleration)";
       }
       if (seg.length > 30.0) {
@@ -92,12 +100,12 @@ function onSection() {
       }
       // Optionally, adjust jerk for tight moves
       if (seg.jerk && (seg.type === "arc" || seg.length < 2.0)) {
-        writeBlock("M205 J" + (seg.jerk * 0.7).toFixed(3) + " ; Reduce jerk for detail");
+        writeln("M205 J" + (seg.jerk * 0.7).toFixed(3) + " ; Reduce jerk for detail");
       }
       outLine = makeMove(seg, F);
     }
-    if (warn) writeComment("MAGIC: " + warn);
-    writeBlock(outLine);
+    if (warn) writeln("; MAGIC: " + warn);
+    writeln(outLine);
   }
 }
 
@@ -107,12 +115,6 @@ function makeMove(seg, F) {
   return "G1 F" + Math.round(F);
 }
 
-function writeBlock(str) {
-  writeLine(str);
-}
-function writeComment(msg) {
-  writeLine("; " + msg);
-}
 function onClose() {
-  writeComment("End of program");
+  writeln("; End of program");
 }
