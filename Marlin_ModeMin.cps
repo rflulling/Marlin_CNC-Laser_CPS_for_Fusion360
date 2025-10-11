@@ -2,7 +2,7 @@
 // Copyright (c) 2025 rflulling
 // An open source project developed by GitHub Copilot GPT-4.1 and rflulling
 /**
- * Minimal Marlin/Fusion360 Post Processor with Working Dropdown
+ * Minimal Marlin/Fusion360 Post Processor with Working Dropdown and Correct Output
  */
 
 description = "Marlin Minimal Mode Checker";
@@ -40,7 +40,7 @@ var incompatibleGcodes = {
 };
 
 function onOpen() {
-  writeComment("Minimal Marlin Mode Checker - Mode: " + modeLabels[properties.marlinMode]);
+  writeln("; Minimal Marlin Mode Checker - Mode: " + modeLabels[properties.marlinMode]);
 }
 
 function onSection() {
@@ -58,9 +58,9 @@ function onSection() {
     var line = sampleLines[i];
     var issues = checkForIncompatible(line, properties.marlinMode);
     if (issues.length > 0) {
-      writeComment("WARNING: " + issues.join(", ") + " found in line: " + line);
+      writeln("; WARNING: " + issues.join(", ") + " found in line: " + line);
     }
-    writeBlock(line);
+    writeln(line);
   }
 }
 
@@ -78,6 +78,4 @@ function checkForIncompatible(line, mode) {
   return found;
 }
 
-function writeBlock(str) { writeLine(str); }
-function writeComment(msg) { writeLine("; " + msg); }
-function onClose() { writeComment("End of program"); }
+function onClose() { writeln("; End of program"); }
