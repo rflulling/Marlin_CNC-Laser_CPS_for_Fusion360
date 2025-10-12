@@ -1,28 +1,75 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2025 rflulling
-// An open source project developed by GitHub Copilot GPT-4.1 and rflulling
+# Developer Notes: Marlin Fusion360 Post Processors
 
-## Motion Coordination, Dynamic Speed, and the "Magic" Option
+## Authorship & License
 
-### Rationale
+- **Primary Maintainer:** rflulling
+- **Copilot/GPT-4.1**: core code generation and iteration (always credited in headers)
+- **License:** MIT (SPDX-License-Identifier: MIT)
 
-- Marlin's firmware now supports advanced kinematics: junction deviation, S-curve, dynamic lookahead, and runtime g-code overrides (M204/M205/M220/M221/M104).
-- For the best results, especially in FDM and adaptive CNC, neither the firmware nor the G-code should "fight" for control. Instead, combine both tools.
-- This post processor now includes a "Speed Control Mode" with three settings:
-    - **Firmware:** User sets acceleration/jerk in Marlin, G-code is simple.
-    - **G-code:** The post processor sets F/accel/jerk per move/toolpath.
-    - **Magic:** The post analyzes each segment (length, radius, type), dynamically adjusting F, acceleration, and jerk for best print/cut quality and material/tool safety.
-- Magic mode uses both Fusion360's geometric knowledge and Marlin's runtime capabilities for optimally smooth and safe motion.
+---
 
-### Implementation Notes
+## Version History (All Files)
 
-- The "Magic" mode may increase post-processing time and G-code size, and use more MCU resources.
-- User is warned in G-code comments when Magic is active.
-- All logic is extensible for future material, tool, or firmware-specific optimizations.
-- Segment analysis is done in the post for demo; can be adapted to real Fusion360 toolpath APIs.
+| Version | File             | Date         | Changes/Fixes                                             |
+|---------|------------------|--------------|-----------------------------------------------------------|
+| 1.4.0   | All              | 2025-10-12   | Startup/shutdown config, device start options, header docs|
+| 1.3.0   | All              | 2025-10-12   | Header, units, positioning, zeroing, custom code, ext fix |
+| 1.2.0   | All              | 2025-10-11   | Real toolpath output; interface fixes                     |
+| 1.1.x   | All              | 2025-10-10   | Mode/speed options, UI, structure bugfixes                |
+| 1.0.x   | Minimal only     | 2025-10-09   | First working minimal output                              |
 
-### Future Work
+---
 
-- Add user-tunable thresholds for segment length, arc radius, ramp/feed factors.
-- Allow material/tool lookup for optimal chip load/feedrate in CNC.
-- Document how to tune Marlin and post settings for best results.
+## File Overview
+
+- **marlin_mode_minimal.cps**:  
+  Clean, basic, real Marlin output. Use as a template for new posts or for debugging.
+- **marlin_multimode.cps**:  
+  Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown.
+- **marlin_magic_speed.cps**:  
+  Like MultiMode, but adds “Magic” experimental per-move speed/accel/jerk logic.
+
+---
+
+## Major Features
+
+- **Header block:**  
+  - Outputs vendor, version, credits, config summary, units, positioning, zeroing, device start/stop, custom code
+- **Units & Positioning:**  
+  - Outputs `G21`/`G20` and `G90` at top of file (always absolute for Marlin)
+- **Zeroing:**  
+  - User can select: None, Auto (G92 X0 Y0 Z0), or Custom (G92 with user offsets)
+- **Spindle/Router/Laser Start:**  
+  - User can select startup: Automatic (insert M3/M106), Operator, or Hardware (comment only)
+- **Shutdown:**  
+  - Default (Z retract, OFF, Y home, X home), Custom, or None
+- **Custom startup/header/end code:**  
+  - User-supplied, output verbatim before toolpath or at end
+- **File extension:**  
+  - User can select `.gcode` (default) or `.nc`
+- **Warnings:**  
+  - E axis moves in non-FDM modes are flagged
+
+---
+
+## Best Practices
+
+- **Increment version and update this file on any change.**
+- **Keep README and DEV_NOTES in sync with file structure and features.**
+- **Header block should always reflect actual config and last edit/version.**
+- **All user-facing strings should be clear and accurate.**
+- **Only add startup/shutdown code needed for Marlin or user’s specific workflow.**
+
+---
+
+## To Do / Ideas
+
+- Allow user to save/restore property presets.
+- Add estimated print/cut time (if available from Fusion360 API).
+- Expand “Magic” mode with segment-aware logic (length/radius/type/etc).
+- Add tool and material info to header if available.
+- Add unit tests or output file tests.
+
+---
+
+For feature requests, bug reports, or help, contact **rflulling** or open an issue on GitHub.
