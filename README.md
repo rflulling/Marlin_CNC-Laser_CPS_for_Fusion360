@@ -56,6 +56,8 @@ This repository contains three fully operational Fusion360 post processors for M
 
 - **1.4.0** (2025-10-12)
     - Spindle/laser/router start logic, shutdown options, header doc, bugfixes.
+    - No real magic in here yet. Working on that. Though I may remove if I cannot get what I would like from this function.
+    - once perfected will be integrated as an option under multimode. 
 
 ---
 
