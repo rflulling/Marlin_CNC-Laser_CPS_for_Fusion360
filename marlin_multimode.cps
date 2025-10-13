@@ -1,29 +1,23 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 rflulling
 // An open source project developed by GitHub Copilot GPT-4.1 and rflulling
-// Version: 1.4.0
+// Version: 1.5.0
 /**
  * Fusion360 Post Processor for Marlin (FDM/CNC/Laser) - Multi-Mode
- * Real toolpath G-code output.
- * Features:
- *   - Concise NC file header with config/credits
- *   - Units and positioning mode G-code
- *   - Optional work zeroing
- *   - Optional custom header/startup code
- *   - Spindle/Laser/Router start options (CNC/Laser only)
- *   - Selectable output extension (.gcode or .nc)
- *   - Shutdown sequence: Default (Z retract, OFF, G28 Y0, G28 X0), Custom, or None
- *   - Supports FDM, CNC, Laser modes
- *   - User-selectable speed control
+ * 
+ * - Supports FDM, CNC, and Laser mode with real toolpath output.
+ * - User can select mode, speed control approach, startup/shutdown, and TMC driver setup.
+ * - Reports all capabilities to Fusion360.
+ * - Concise NC file header, units, positioning, zeroing, custom code, device control, and TMC setup.
  */
 
 description = "Marlin Multi-Mode (FDM/CNC/Laser)";
 vendor = "rflulling";
-longDescription = "Fusion360 post for Marlin FDM, CNC, and Laser. Full config, header, startup/shutdown, real G-code, mode & speed selection.";
+longDescription = "Fusion360 post for Marlin FDM, CNC, and Laser. Full config, header, startup/shutdown, TMC driver setup, real G-code, mode & speed selection.";
 extension = "gcode"; // default, user can override
 
 /*
-Version: 1.4.0
+Version: 1.5.0
 Vendor: rflulling
 Credits: GitHub Copilot GPT-4.1
 */
@@ -39,7 +33,9 @@ properties = {
   fileExt: 0,
   startDevice: 0,
   shutdownMode: 0,
-  customShutdown: ""
+  customShutdown: "",
+  enableTMCSetup: false,
+  tmcSetupCode: ""
 };
 
 propertyDefinitions = {
@@ -134,6 +130,20 @@ propertyDefinitions = {
     type: "string",
     default_mm: "",
     default_in: ""
+  },
+  enableTMCSetup: {
+    title: "Enable TMC Driver Setup",
+    description: "If enabled, user-supplied TMC driver G/M-codes will be output after startup.",
+    type: "boolean",
+    default_mm: false,
+    default_in: false
+  },
+  tmcSetupCode: {
+    title: "TMC Driver Setup Code",
+    description: "Advanced users: Insert Marlin M-codes for TMC configuration (e.g., M906/M913/M569). One per line.",
+    type: "string",
+    default_mm: "",
+    default_in: ""
   }
 };
 
@@ -145,7 +155,7 @@ function onOpen() {
 
   writeln("; ==============================================");
   writeln("; Marlin Multi-Mode Post - Mode: " + machineModeLabels[properties.machineMode] + " | Speed: " + speedModeLabels[properties.speedControlMode]);
-  writeln("; Vendor: rflulling | Version: 1.4.0 | Credits: GitHub Copilot GPT-4.1");
+  writeln("; Vendor: rflulling | Version: 1.5.0 | Credits: GitHub Copilot GPT-4.1");
   writeln("; Units: " + (unit == MM ? "mm" : "inch"));
   writeln("; Positioning: Absolute (G90)");
   writeln("; Zeroing: " +
@@ -159,6 +169,18 @@ function onOpen() {
   writeln("; Shutdown: " +
     (properties.shutdownMode === 0 ? "Default" :
      properties.shutdownMode === 1 ? "Custom" : "None"));
+  if (properties.enableTMCSetup && properties.tmcSetupCode) {
+    writeln("; --- TMC Driver Setup ---");
+    writeln("; User-supplied TMC driver configuration is enabled.");
+    writeln("; The following code will be sent before toolpath:");
+    var tmcLines = properties.tmcSetupCode.split(/\r?\n/);
+    for (var i = 0; i < tmcLines.length; ++i) {
+      if (tmcLines[i].trim()) {
+        writeln("; " + tmcLines[i]);
+      }
+    }
+    writeln("; --- End TMC Driver Setup ---");
+  }
   if (properties.customHeader) {
     writeln("; --- Custom Header/Startup Code ---");
     var lines = properties.customHeader.split(/\r?\n/);
@@ -184,6 +206,16 @@ function onOpen() {
       writeln("M3 ; Start spindle/router");
     } else if (properties.machineMode === 2) { // LASER
       writeln("M106 ; Laser ON (startup, if needed)");
+    }
+  }
+
+  // TMC driver setup block
+  if (properties.enableTMCSetup && properties.tmcSetupCode) {
+    var tmcLines = properties.tmcSetupCode.split(/\r?\n/);
+    for (var i = 0; i < tmcLines.length; ++i) {
+      if (tmcLines[i].trim()) {
+        writeln(tmcLines[i]);
+      }
     }
   }
 

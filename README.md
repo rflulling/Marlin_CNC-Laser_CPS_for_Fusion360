@@ -7,7 +7,7 @@ This repository contains three fully operational Fusion360 post processors for M
 - **Marlin Minimal**  
   A minimal, clean, real G-code post with mode selection, output rules, and concise configuration.
 - **Marlin MultiMode**  
-  Full support for FDM, CNC, and Laser. User-selectable speed control and startup/shutdown options.
+  Full support for FDM, CNC, and Laser. User-selectable speed control, startup/shutdown options, and **TMC driver setup support** for advanced users.
 - **Marlin Magic Speed**  
   Experimental “magic” segment-aware speed/accel/jerk logic. Also supports basic and G-code modes.
 
@@ -30,7 +30,9 @@ This repository contains three fully operational Fusion360 post processors for M
     - Default: Z retract, OFF, home Y, home X
     - Custom shutdown script
     - No shutdown (only end comment)
-- All user choices are echoed in header comments for traceability.
+- **TMC Driver Setup** (MultiMode only):
+    - Optional, advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
+    - All code and settings clearly commented in header for traceability
 
 ---
 
@@ -39,33 +41,35 @@ This repository contains three fully operational Fusion360 post processors for M
 ### Minimal
 
 - **1.4.0** (2025-10-12)
-    - Added spindle/laser/router start method property and logic.
-    - Added shutdown sequence property, default now: Z retract, OFF, Y home, X home.
-    - All settings documented in header.
-    - All prior config and bugfixes retained.
+    - Spindle/laser/router start logic, shutdown options, header doc, bugfixes.
 
 ### MultiMode
 
+- **1.5.0** (2025-10-13)
+    - **NEW:** TMC Driver Setup: optional, user-supplied M-codes (M906, M913, etc) for advanced configuration at program start.
+    - All prior features retained.
+
 - **1.4.0** (2025-10-12)
-    - All above features, plus:
-    - Mode (FDM/CNC/Laser) and speed control as before.
-    - Full startup/shutdown customization.
+    - Spindle/laser/router start logic, shutdown options, header doc, bugfixes.
 
 ### Magic Speed
 
 - **1.4.0** (2025-10-12)
-    - All above features, plus:
-    - "Magic" mode for segment-aware speed/accel/jerk logic.
+    - Spindle/laser/router start logic, shutdown options, header doc, bugfixes.
 
 ---
 
 ## Usage
 
 1. **Install the .cps file** in Fusion360 as a custom post processor.
-2. **Set properties as desired**:
-    - Mode (FDM/CNC/Laser), speed control, zeroing, spindle/laser start method, shutdown sequence, custom code, etc.
-3. **Generate NC/gcode output** from your Fusion360 project.
-4. **Review header and startup/shutdown code** in output file; edit as needed for your workflow.
+2. **Set properties as desired** (mode, speed, zeroing, device start/stop, TMC setup, etc).
+3. For TMC driver setup (MultiMode only):  
+    - Enable “TMC Driver Setup” in properties.
+    - Enter your custom M-codes (one per line) for Marlin TMC configuration.
+    - These will be output at the start of your NC file.
+    - **Caution:** Requires Marlin to be configured to accept these commands. Use only if you understand TMC driver options.
+4. **Generate NC/gcode output** from your Fusion360 project.
+5. **Review header and startup/shutdown code** in output file; edit as needed for your workflow.
 
 ---
 
