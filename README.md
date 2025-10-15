@@ -33,6 +33,12 @@ This repository contains three fully operational Fusion360 post processors for M
 - **TMC Driver Setup** (MultiMode only):
     - Optional, advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
     - All code and settings clearly commented in header for traceability
+- **Battery Monitoring** (MultiMode only):
+    - Optional battery status monitoring for dual lithium batteries in parallel configuration
+    - E-ink display compatible with low-power status indication
+    - Configurable voltage thresholds (low warning and critical levels)
+    - Auto-reporting at configurable intervals using Marlin M155 command
+    - Automatic shutdown of reporting at program end
 
 ---
 
@@ -44,6 +50,10 @@ This repository contains three fully operational Fusion360 post processors for M
     - Spindle/laser/router start logic, shutdown options, header doc, bugfixes.
 
 ### MultiMode
+
+- **1.6.0** (2025-10-15)
+    - **NEW:** Battery Monitoring: Optional monitoring for dual lithium batteries in parallel with e-ink display support. Auto-reporting using M155, configurable voltage thresholds.
+    - All prior features retained.
 
 - **1.5.0** (2025-10-13)
     - **NEW:** TMC Driver Setup: optional, user-supplied M-codes (M906, M913, etc) for advanced configuration at program start.
@@ -64,14 +74,20 @@ This repository contains three fully operational Fusion360 post processors for M
 ## Usage
 
 1. **Install the .cps file** in Fusion360 as a custom post processor.
-2. **Set properties as desired** (mode, speed, zeroing, device start/stop, TMC setup, etc).
+2. **Set properties as desired** (mode, speed, zeroing, device start/stop, TMC setup, battery monitoring, etc).
 3. For TMC driver setup (MultiMode only):  
     - Enable “TMC Driver Setup” in properties.
     - Enter your custom M-codes (one per line) for Marlin TMC configuration.
     - These will be output at the start of your NC file.
     - **Caution:** Requires Marlin to be configured to accept these commands. Use only if you understand TMC driver options.
-4. **Generate NC/gcode output** from your Fusion360 project.
-5. **Review header and startup/shutdown code** in output file; edit as needed for your workflow.
+4. For battery monitoring (MultiMode only):
+    - Enable "Battery Monitoring" in properties.
+    - Configure voltage thresholds for low and critical warnings (default: 3.3V and 3.0V per cell).
+    - Set auto-report interval in seconds (default: 10 seconds, use 0 to disable).
+    - The post processor will insert M155 commands to enable/disable auto-reporting.
+    - **Note:** Requires Marlin firmware with battery monitoring support and dual lithium batteries in parallel configuration.
+5. **Generate NC/gcode output** from your Fusion360 project.
+6. **Review header and startup/shutdown code** in output file; edit as needed for your workflow.
 
 ---
 

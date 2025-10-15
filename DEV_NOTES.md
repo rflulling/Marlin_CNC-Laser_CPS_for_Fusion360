@@ -12,6 +12,7 @@
 
 | Version | File             | Date         | Changes/Fixes                                             |
 |---------|------------------|--------------|-----------------------------------------------------------|
+| 1.6.0   | MultiMode only   | 2025-10-15   | **Battery Monitoring**: Optional monitoring for dual lithium batteries in parallel with e-ink display support. M155 auto-reporting, configurable voltage thresholds. |
 | 1.5.0   | MultiMode only   | 2025-10-13   | **TMC Driver Setup**: Optional user-supplied M-codes at startup for advanced Marlin TMC driver configuration. Header and docs updated. |
 | 1.4.0   | All              | 2025-10-12   | Startup/shutdown config, device start options, header docs|
 | 1.3.0   | All              | 2025-10-12   | Header, units, positioning, zeroing, custom code, ext fix |
@@ -26,7 +27,7 @@
 - **marlin_mode_minimal.cps**:  
   Clean, basic, real Marlin output. Use as a template for new posts or for debugging.
 - **marlin_multimode.cps**:  
-  Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, and **TMC driver setup for power users**.
+  Full-featured. User can choose mode (FDM, CNC, Laser), speed logic, startup/shutdown, **TMC driver setup for power users**, and **battery monitoring for dual lithium batteries with e-ink display**.
 - **marlin_magic_speed.cps**:  
   Like MultiMode, but adds “Magic” experimental per-move speed/accel/jerk logic.
 
@@ -47,6 +48,12 @@
 - **TMC Driver Setup** (MultiMode only):  
   - Optional, advanced-use property to insert custom Marlin TMC M-codes at startup (e.g., for current, mode, hybrid threshold, etc)
   - All code and settings clearly commented in header for traceability
+- **Battery Monitoring** (MultiMode only):
+  - Optional monitoring for dual lithium batteries in parallel configuration
+  - E-ink display compatible with low-power status indication
+  - Configurable voltage thresholds (low warning and critical levels)
+  - Auto-reporting using Marlin M155 command at configurable intervals
+  - Automatic shutdown of reporting at program end
 - **Custom startup/header/end code:**  
   - User-supplied, output verbatim before toolpath or at end
 - **File extension:**  
