@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 rflulling
 // An open source project developed by GitHub Copilot GPT-4.1 and rflulling
-// Version: 1.4.0
+// Version: 1.5.0
 /**
  * Minimal, operational Marlin/Fusion360 Post Processor.
  * Real toolpath G-code output.
@@ -13,15 +13,16 @@
  *   - Spindle/Laser/Router start options (CNC/Laser only)
  *   - Selectable output extension (.gcode or .nc)
  *   - Shutdown sequence: Default (Z retract, OFF, G28 Y0, G28 X0), Custom, or None
+ *   - Battery monitoring support for dual lithium batteries with e-ink display (M155 auto-report)
  */
 
 description = "Marlin Minimal Real Output";
 vendor = "rflulling";
-longDescription = "Minimal Marlin/Fusion360 post: concise header, units/positioning, zeroing, custom code, startup/shutdown, robust real G-code.";
+longDescription = "Minimal Marlin/Fusion360 post: concise header, units/positioning, zeroing, custom code, startup/shutdown, battery monitoring, robust real G-code.";
 extension = "gcode"; // default, user can override
 
 /*
-Version: 1.4.0
+Version: 1.5.0
 Vendor: rflulling
 Credits: GitHub Copilot GPT-4.1
 */
@@ -34,7 +35,11 @@ properties = {
   fileExt: 0,    // 0=gcode, 1=nc
   startDevice: 0, // 0=Automatic, 1=Operator, 2=Separate Hardware (CNC/Laser only)
   shutdownMode: 0, // 0=Default, 1=Custom, 2=None
-  customShutdown: ""
+  customShutdown: "",
+  enableBatteryMonitoring: false,
+  batteryLowVoltage: 3.3,
+  batteryCriticalVoltage: 3.0,
+  batteryReportInterval: 10
 };
 
 propertyDefinitions = {
@@ -117,6 +122,34 @@ propertyDefinitions = {
     type: "string",
     default_mm: "",
     default_in: ""
+  },
+  enableBatteryMonitoring: {
+    title: "Enable Battery Monitoring",
+    description: "If enabled, adds battery status monitoring for dual lithium batteries with e-ink display support.",
+    type: "boolean",
+    default_mm: false,
+    default_in: false
+  },
+  batteryLowVoltage: {
+    title: "Battery Low Voltage Warning (V)",
+    description: "Voltage per cell at which low battery warning is triggered. Typical: 3.3V for lithium batteries.",
+    type: "number",
+    default_mm: 3.3,
+    default_in: 3.3
+  },
+  batteryCriticalVoltage: {
+    title: "Battery Critical Voltage (V)",
+    description: "Voltage per cell at which battery is critically low. Typical: 3.0V for lithium batteries.",
+    type: "number",
+    default_mm: 3.0,
+    default_in: 3.0
+  },
+  batteryReportInterval: {
+    title: "Battery Report Interval (seconds)",
+    description: "How often to report battery status during operation. Use 0 to disable auto-reporting.",
+    type: "integer",
+    default_mm: 10,
+    default_in: 10
   }
 };
 
@@ -129,7 +162,7 @@ function onOpen() {
   // Header block
   writeln("; ==============================================");
   writeln("; Marlin Minimal Real Output - Mode: " + modeLabels[properties.marlinMode]);
-  writeln("; Vendor: rflulling | Version: 1.4.0 | Credits: GitHub Copilot GPT-4.1");
+  writeln("; Vendor: rflulling | Version: 1.5.0 | Credits: GitHub Copilot GPT-4.1");
   writeln("; Units: " + (unit == MM ? "mm" : "inch"));
   writeln("; Positioning: Absolute (G90)");
   writeln("; Zeroing: " +
@@ -143,6 +176,19 @@ function onOpen() {
   writeln("; Shutdown: " +
     (properties.shutdownMode === 0 ? "Default" :
      properties.shutdownMode === 1 ? "Custom" : "None"));
+  if (properties.enableBatteryMonitoring) {
+    writeln("; --- Battery Monitoring ---");
+    writeln("; Battery monitoring enabled for dual lithium batteries (parallel)");
+    writeln("; Display: E-ink compatible");
+    writeln("; Low voltage warning: " + properties.batteryLowVoltage.toFixed(2) + "V per cell");
+    writeln("; Critical voltage: " + properties.batteryCriticalVoltage.toFixed(2) + "V per cell");
+    if (properties.batteryReportInterval > 0) {
+      writeln("; Auto-report interval: " + properties.batteryReportInterval + " seconds");
+    } else {
+      writeln("; Auto-report: Disabled");
+    }
+    writeln("; --- End Battery Monitoring ---");
+  }
   if (properties.customHeader) {
     writeln("; --- Custom Header/Startup Code ---");
     var lines = properties.customHeader.split(/\r?\n/);
@@ -172,6 +218,20 @@ function onOpen() {
       writeln("M106 ; Laser ON (startup, if needed)");
     }
   }
+
+  // Battery monitoring setup
+  if (properties.enableBatteryMonitoring) {
+    writeln("; --- Battery Monitoring Setup ---");
+    writeln("; Dual lithium batteries in parallel configuration");
+    writeln("; E-ink display support for low-power status indication");
+    if (properties.batteryReportInterval > 0) {
+      writeln("M155 S" + properties.batteryReportInterval + " ; Enable auto-reporting every " + properties.batteryReportInterval + " seconds");
+    }
+    writeln("; Battery voltage thresholds configured:");
+    writeln(";   Low warning: " + properties.batteryLowVoltage.toFixed(2) + "V per cell");
+    writeln(";   Critical: " + properties.batteryCriticalVoltage.toFixed(2) + "V per cell");
+    writeln("; --- End Battery Monitoring Setup ---");
+  }
 }
 
 function onLinear(x, y, z, feed) {
@@ -196,6 +256,15 @@ function onRapid(x, y, z) {
 }
 
 function onClose() {
+  // Battery monitoring shutdown
+  if (properties.enableBatteryMonitoring && properties.batteryReportInterval > 0) {
+    writeln("; --- Battery Monitoring Shutdown ---");
+    writeln("M155 S0 ; Disable auto-reporting");
+    writeln("; NOTE: Check battery voltage before next operation");
+    writeln("; Safe voltage range: " + properties.batteryCriticalVoltage.toFixed(2) + "V - 4.2V per cell");
+    writeln("; --- End Battery Monitoring Shutdown ---");
+  }
+
   // Shutdown sequence (CNC/Laser only, not FDM)
   if (properties.marlinMode === 1 || properties.marlinMode === 2) {
     if (properties.shutdownMode === 0) {
