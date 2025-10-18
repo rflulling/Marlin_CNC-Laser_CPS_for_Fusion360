@@ -1,5 +1,4 @@
-Use version submited on october 12th. Latest is not working right. I dont have time this morning to correct. Will fix after work. Sorry that means reverse axis is unavailable for the moment. 
-
+```markdown
 # Marlin Fusion360 Post Processors
 
 This repository contains three fully operational Fusion360 post processors for Marlin firmware, maintained by **rflulling** and developed with the assistance of **GitHub Copilot GPT-4.1**.
