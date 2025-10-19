@@ -11,6 +11,7 @@ description = "Marlin Magic Speed Post";
 vendor = "rflulling";
 longDescription = "Fusion360 post for Marlin with dynamic, segment-aware speed/accel/jerk. Now includes per-axis inverted X/Y options.";
 extension = "gcode";
+certificationLevel = 2; // Non-Autodesk certified; disables certification error
 
 /*
 Version: 1.4.2
@@ -40,7 +41,7 @@ propertyDefinitions = {
   }
 };
 
-// ... (your other property definitions and variables go here as in previous versions)
+// ... (other property definitions and variables here)
 
 function _applyAxisInvert(x, y) {
   var xo = x;
@@ -58,7 +59,7 @@ function onLinear(x, y, z, feed) {
   if (yOut !== undefined) line += " Y" + yOut.toFixed(3);
   if (z !== undefined) line += " Z" + z.toFixed(3);
   if (feed !== undefined) line += " F" + feed.toFixed(0);
-  // ... (your other logic here as in previous version)
+  // ... (other logic here as needed)
   writeln(line);
 }
 

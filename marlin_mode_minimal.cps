@@ -14,13 +14,13 @@
  *   - Selectable output extension (.gcode or .nc)
  *   - Shutdown sequence: Default (Z retract, OFF, G28 Y0, G28 X0), Custom, or None
  *   - Per-axis inversion (Invert X, Invert Y)
- *   - Patch version to fix issue with introduction of Invert Cordinates option. 
  */
 
-description = "Marlin CPS Minimal";
+description = "Marlin Minimal Real Output";
 vendor = "rflulling";
-longDescription = "Minimal Marlin post: just enough to make it work.";
+longDescription = "Minimal Marlin/Fusion360 post: concise header, units/positioning, zeroing, custom code, startup/shutdown, per-axis invert options.";
 extension = "gcode"; // default, user can override
+certificationLevel = 2; // Non-Autodesk certified; disables certification error
 
 /*
 Version: 1.4.2
