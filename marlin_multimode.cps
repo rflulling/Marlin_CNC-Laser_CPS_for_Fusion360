@@ -5,25 +5,18 @@
 /**
  * Fusion360 Post Processor for Marlin (FDM/CNC/Laser) - Multi-Mode
  *
- *   - Supports FDM, CNC, and Laser mode with real toolpath output.
- *   - User can select mode, speed control approach, startup/shutdown, and TMC driver setup.
- *   - Dynamic TMC adjustments: the post can emit TMC M-codes based on move feed/length heuristics.
- *   - Reports all capabilities to Fusion360.
- *   - Concise NC file header with config/credits, units, positioning, zeroing, custom code, device control, TMC setup, and per-axis invert options.
- *   - Units and positioning mode G-code
- *   - Optional work zeroing
- *   - Optional custom header/startup code
- *   - Spindle/Laser/Router start options (CNC/Laser only)
- *   - Selectable output extension (.gcode or .nc)
- *   - Shutdown sequence: Default (Z retract, OFF, G28 Y0, G28 X0), Custom, or None
- *   - Per-axis inversion (Invert X, Invert Y)
- *   - Patch version to fix issue with introduction of Invert Cordinates option. 
+ * - Supports FDM, CNC, and Laser mode with real toolpath output.
+ * - User can select mode, speed control approach, startup/shutdown, and TMC driver setup.
+ * - Dynamic TMC adjustments: the post can emit TMC M-codes based on move feed/length heuristics.
+ * - Reports all capabilities to Fusion360.
+ * - Concise NC file header, units, positioning, zeroing, custom code, device control, TMC setup, and per-axis invert options.
  */
 
-description = "Marlin CPS Multi-Mode";
+description = "Marlin Multi-Mode (FDM/CNC/Laser)";
 vendor = "rflulling";
 longDescription = "Fusion360 post for Marlin FDM, CNC, and Laser. Full config, dynamic TMC support, header, startup/shutdown, real G-code, mode & speed selection.";
 extension = "gcode"; // default, user can override
+certificationLevel = 2; // Non-Autodesk certified; disables certification error
 
 /*
 Version: 1.6.2
